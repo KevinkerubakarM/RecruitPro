@@ -1,0 +1,225 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  RECRUITER
+  CANDIDATE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      UserRole
+  name      String?
+  phone     String?
+  company   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  recruiterProfile RecruiterProfile?
+  candidateProfile CandidateProfile?
+
+  @@map("users")
+}
+
+model RecruiterProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName    String?
+  companyWebsite String?
+  position       String?
+  verified       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("recruiter_profiles")
+}
+
+model CandidateProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume           String?
+  skills           String[]
+  experience       Int?     // years of experience
+  education        String?
+  location         String?
+  availableForWork Boolean  @default(true)
+  
+  // Work experience details
+  isNewToExperience Boolean  @default(false)
+  yearsOfExperience Int?     // Total years of experience
+  companies         String[] // List of companies worked at
+  designations      String[] // List of designations/positions
+  
+  // Job preferences
+  lookingForRoles   String[] // Roles the candidate is looking for
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("candidate_profiles")
+}
+
+enum SectionType {
+  ABOUT_US
+  LIFE_AT_COMPANY
+  VALUES
+  BENEFITS
+  TEAM
+  LOCATIONS
+  TESTIMONIALS
+  CUSTOM
+}
+
+model CompanyBranding {
+  id              String        @id @default(cuid())
+  userId          String
+  companyName     String
+  companySlug     String        @unique
+  
+  // Theme settings
+  primaryColor    String        @default("#6366f1")
+  secondaryColor  String        @default("#8b5cf6")
+  accentColor     String        @default("#ec4899")
+  logoUrl         String?
+  bannerUrl       String?
+  cultureVideoUrl String?
+  
+  // Content sections (stored as JSON)
+  sections        Json          @default("[]")
+  
+  // Publishing
+  isPublished     Boolean       @default(false)
+  publishedAt     DateTime?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  jobs            Job[]
+
+  @@map("company_branding")
+  @@unique([userId, companySlug])
+  @@index([userId])
+  @@index([companySlug])
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  REMOTE
+}
+
+enum ExperienceLevel {
+  ENTRY_LEVEL
+  JUNIOR
+  MID_LEVEL
+  SENIOR
+  LEAD
+  EXECUTIVE
+}
+
+model Job {
+  id                   String           @id @default(cuid())
+  companyBrandingId    String
+  companyBranding      CompanyBranding  @relation(fields: [companyBrandingId], references: [id], onDelete: Cascade)
+  
+  // Basic info
+  title                String
+  description          String?          @db.Text
+  location             String
+  jobType              JobType
+  experienceLevel      ExperienceLevel  @default(MID_LEVEL)
+  
+  // Salary (optional)
+  salaryMin            Int?
+  salaryMax            Int?
+  salaryCurrency       String           @default("USD")
+  
+  // Requirements and skills (updated structure)
+  technicalRequirements String[]
+  softSkills           String[]
+  responsibilities     String[]
+  benefits             String[]
+  
+  // Deprecated fields (for backward compatibility)
+  requirements         String[]         @default([])
+  skills               String[]         @default([])
+  
+  // Application details (auto-generated)
+  careerPageSlug       String
+  applicationUrl       String?
+  contactEmail         String?
+  
+  // Status
+  isActive             Boolean          @default(true)
+  postedAt             DateTime         @default(now())
+  expiresAt            DateTime?
+  
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  // Relations
+  applications         JobApplication[]
+
+  @@map("jobs")
+  @@index([companyBrandingId])
+  @@index([isActive, postedAt])
+  @@index([location])
+  @@index([jobType])
+  @@index([careerPageSlug])
+}
+
+enum ApplicationStatus {
+  APPLIED
+  REVIEWING
+  INTERVIEWING
+  OFFERED
+  REJECTED
+  WITHDRAWN
+}
+
+model JobApplication {
+  id                  String            @id @default(cuid())
+  jobId               String
+  job                 Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  // Applicant information
+  candidateName       String
+  candidateEmail      String
+  candidatePhone      String?
+  candidateProfileUrl String?
+  resumeUrl           String?
+  coverLetter         String?           @db.Text
+  
+  // Application tracking
+  status              ApplicationStatus @default(APPLIED)
+  notes               String?           @db.Text
+  
+  // Timestamps
+  appliedAt           DateTime          @default(now())
+  reviewedAt          DateTime?
+  updatedAt           DateTime          @updatedAt
+
+  @@map("job_applications")
+  @@unique([jobId, candidateEmail])
+  @@index([jobId])
+  @@index([candidateEmail])
+  @@index([status])
+  @@index([appliedAt])
+}
