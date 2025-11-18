@@ -1,6 +1,9 @@
 {
   "name": "recruitpro",
   "version": "0.1.0",
+  "author": {
+    "name": "Kevinkerubakar"
+  },
   "private": true,
   "scripts": {
     "dev": "npx prisma generate && next dev",
