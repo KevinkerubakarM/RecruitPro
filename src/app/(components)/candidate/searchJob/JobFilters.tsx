@@ -1,13 +1,14 @@
 "use client";
 
 import { JobFiltersProps } from "@/types/app/(components)/candidate/jobcard.type";
-import { JOB_TYPES, EXPERIENCE_LEVELS } from "@/lib/constants";
+import { JOB_TYPES, EXPERIENCE_LEVELS, EMPLOYMENT_TYPES } from "@/lib/constants";
 import { useState } from "react";
 
 export default function JobFilters({
   filters,
   onFilterChange,
   locations,
+  departments = [],
   jobTypeCounts = {},
 }: JobFiltersProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -30,14 +31,40 @@ export default function JobFilters({
     onFilterChange({ experienceLevel: updated.length > 0 ? updated : undefined });
   };
 
+  const handleEmploymentTypeToggle = (type: string) => {
+    const current = filters.employmentType || [];
+    const updated = current.includes(type) ? current.filter((t) => t !== type) : [...current, type];
+    onFilterChange({ employmentType: updated.length > 0 ? updated : undefined });
+  };
+
+  const handleDepartmentToggle = (dept: string) => {
+    const current = filters.department || [];
+    const updated = current.includes(dept) ? current.filter((d) => d !== dept) : [...current, dept];
+    onFilterChange({ department: updated.length > 0 ? updated : undefined });
+  };
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onFilterChange({ sortBy: e.target.value || undefined });
+  };
+
   const handleClearAll = () => {
-    onFilterChange({ location: undefined, jobType: undefined, experienceLevel: undefined });
+    onFilterChange({
+      location: undefined,
+      jobType: undefined,
+      experienceLevel: undefined,
+      employmentType: undefined,
+      department: undefined,
+      sortBy: undefined,
+    });
   };
 
   const activeFilterCount =
     (filters.location ? 1 : 0) +
     (filters.jobType?.length || 0) +
-    (filters.experienceLevel?.length || 0);
+    (filters.experienceLevel?.length || 0) +
+    (filters.employmentType?.length || 0) +
+    (filters.department?.length || 0) +
+    (filters.sortBy ? 1 : 0);
 
   return (
     <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
@@ -74,6 +101,30 @@ export default function JobFilters({
 
       {/* Filter content */}
       <div id="filter-content" className={`space-y-6 ${isExpanded ? "block" : "hidden"} lg:block`}>
+        {/* Sort By filter */}
+        <div>
+          <label
+            htmlFor="sort-filter"
+            className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide"
+          >
+            Sort By
+          </label>
+          <select
+            id="sort-filter"
+            value={filters.sortBy || ""}
+            onChange={handleSortChange}
+            className="w-full px-4 py-3 border-2 border-indigo-200 rounded-xl 
+                       focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all
+                       hover:border-indigo-300 bg-white font-medium cursor-pointer"
+            aria-label="Sort jobs by"
+          >
+            <option value="">Most Recent</option>
+            <option value="date-asc">Oldest First</option>
+            <option value="title-asc">Title (A-Z)</option>
+            <option value="title-desc">Title (Z-A)</option>
+          </select>
+        </div>
+
         {/* Location filter */}
         <div>
           <label
@@ -107,30 +158,22 @@ export default function JobFilters({
               Job Type
             </legend>
             <div className="space-y-3">
-              {Object.entries(JOB_TYPES).map(([key, label]) => {
-                const count = jobTypeCounts[key] || 0;
-                return (
-                  <label
-                    key={key}
-                    className="flex items-center cursor-pointer hover:bg-indigo-50 p-3 rounded-xl transition-all"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters.jobType?.includes(key) || false}
-                      onChange={() => handleJobTypeToggle(key)}
-                      className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 
-                                 border-gray-300 rounded-md"
-                      aria-label={`Filter by ${label}`}
-                    />
-                    <span className="ml-3 text-sm text-gray-900 flex-1 font-semibold">{label}</span>
-                    {count > 0 && (
-                      <span className="text-xs text-gray-600 bg-gray-200 px-3 py-1 rounded-full font-bold">
-                        {count}
-                      </span>
-                    )}
-                  </label>
-                );
-              })}
+              {Object.entries(JOB_TYPES).map(([key, label]) => (
+                <label
+                  key={key}
+                  className="flex items-center cursor-pointer hover:bg-indigo-50 p-3 rounded-xl transition-all"
+                >
+                  <input
+                    type="checkbox"
+                    checked={filters.jobType?.includes(key) || false}
+                    onChange={() => handleJobTypeToggle(key)}
+                    className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 
+                               border-gray-300 rounded-md"
+                    aria-label={`Filter by ${label}`}
+                  />
+                  <span className="ml-3 text-sm text-gray-900 font-semibold">{label}</span>
+                </label>
+              ))}
             </div>
           </fieldset>
         </div>
@@ -161,6 +204,62 @@ export default function JobFilters({
             </div>
           </fieldset>
         </div>
+
+        {/* Employment Type filter */}
+        <div>
+          <fieldset>
+            <legend className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
+              Employment Type
+            </legend>
+            <div className="space-y-3">
+              {Object.entries(EMPLOYMENT_TYPES).map(([key, label]) => (
+                <label
+                  key={key}
+                  className="flex items-center cursor-pointer hover:bg-indigo-50 p-3 rounded-xl transition-all"
+                >
+                  <input
+                    type="checkbox"
+                    checked={filters.employmentType?.includes(key) || false}
+                    onChange={() => handleEmploymentTypeToggle(key)}
+                    className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 
+                               border-gray-300 rounded-md"
+                    aria-label={`Filter by ${label} employment`}
+                  />
+                  <span className="ml-3 text-sm text-gray-900 font-semibold">{label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        </div>
+
+        {/* Department filter */}
+        {departments.length > 0 && (
+          <div>
+            <fieldset>
+              <legend className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
+                Department
+              </legend>
+              <div className="space-y-3">
+                {departments.map((dept) => (
+                  <label
+                    key={dept}
+                    className="flex items-center cursor-pointer hover:bg-indigo-50 p-3 rounded-xl transition-all"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={filters.department?.includes(dept) || false}
+                      onChange={() => handleDepartmentToggle(dept)}
+                      className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 
+                                 border-gray-300 rounded-md"
+                      aria-label={`Filter by ${dept} department`}
+                    />
+                    <span className="ml-3 text-sm text-gray-900 font-semibold">{dept}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          </div>
+        )}
       </div>
     </div>
   );

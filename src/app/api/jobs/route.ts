@@ -99,6 +99,8 @@ export async function POST(request: NextRequest) {
             location: body.location,
             jobType: body.jobType,
             experienceLevel: body.experienceLevel,
+            employmentType: body.employmentType,
+            department: body.department,
             description: body.description,
             technicalRequirements: body.technicalRequirements,
             softSkills: body.softSkills,
@@ -141,7 +143,7 @@ export async function POST(request: NextRequest) {
                 data: {
                     id: job.id,
                     title: job.title,
-                    careerPageSlug: job.careerPageSlug,
+                    careerSlug: job.careerSlug,
                     applicationUrl: job.applicationUrl || '',
                     isActive: job.isActive,
                 },

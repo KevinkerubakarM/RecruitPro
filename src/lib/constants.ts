@@ -70,6 +70,12 @@ export const EXPERIENCE_LEVELS = {
     EXECUTIVE: 'Executive',
 } as const
 
+// Employment Types
+export const EMPLOYMENT_TYPES = {
+    PERMANENT: 'Permanent',
+    TEMPORARY: 'Temporary',
+} as const
+
 // HTTP Status Codes
 export const HTTP_STATUS = {
     OK: 200,

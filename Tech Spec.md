@@ -96,7 +96,7 @@ CandidateProfile Table:
 id String @id
 userId String @unique
 user User @relation
-resume String?
+resume String
 skills String[]
 experience Int
 education String
@@ -143,6 +143,8 @@ description String?
  location String
 jobType JobType
 experienceLevel ExperienceLevel
+  employmentType       EmploymentType
+  department           String
  salaryMin Int
 salaryMax Int
 salaryCurrency String
@@ -152,7 +154,7 @@ responsibilities String[]
 benefits String[]
 requirements String[]
  skills String[]
- careerPageSlug String
+ careerSlug String
 applicationUrl String
 contactEmail String
 isActive Boolean
@@ -191,7 +193,7 @@ updatedAt DateTime
 
 2. Test user experience
 
-- Recruiter is given enough details on pages,during creating career page,job posts
+- Recruiter is shown enough details on pages,during creating career page,job posts.
 - All buttons are working and redirecting to correct places.Step by step, check page wise.
 - User friendly design loading placeholders to know if page has some loading elements.
 - All job posts are accurate as recruiter designed.No missing elements.

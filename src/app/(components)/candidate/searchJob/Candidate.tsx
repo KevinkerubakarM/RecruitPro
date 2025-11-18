@@ -18,12 +18,16 @@ interface CandidateClientProps {
   initialLimit: number;
   initialTotalPages: number;
   locations: string[];
+  departments: string[];
   jobTypeCounts: Record<string, number>;
   initialFilters: {
     search?: string;
     location?: string;
     jobType?: string[];
     experienceLevel?: string[];
+    employmentType?: string[];
+    department?: string[];
+    sortBy?: string;
   };
 }
 
@@ -34,6 +38,7 @@ export default function CandidateClient({
   initialLimit,
   initialTotalPages,
   locations,
+  departments,
   jobTypeCounts,
   initialFilters,
 }: CandidateClientProps) {
@@ -51,6 +56,9 @@ export default function CandidateClient({
     location: initialFilters.location || "",
     jobType: initialFilters.jobType || [],
     experienceLevel: initialFilters.experienceLevel || [],
+    employmentType: initialFilters.employmentType || [],
+    department: initialFilters.department || [],
+    sortBy: initialFilters.sortBy || "",
   });
 
   // Update URL and fetch jobs when filters change
@@ -67,11 +75,13 @@ export default function CandidateClient({
     if (updatedFilters.location) params.location = updatedFilters.location;
     if (updatedFilters.jobType && updatedFilters.jobType.length > 0)
       params.jobType = updatedFilters.jobType.join(",");
-    if (
-      updatedFilters.experienceLevel &&
-      updatedFilters.experienceLevel.length > 0
-    )
+    if (updatedFilters.experienceLevel && updatedFilters.experienceLevel.length > 0)
       params.experienceLevel = updatedFilters.experienceLevel.join(",");
+    if (updatedFilters.employmentType && updatedFilters.employmentType.length > 0)
+      params.employmentType = updatedFilters.employmentType.join(",");
+    if (updatedFilters.department && updatedFilters.department.length > 0)
+      params.department = updatedFilters.department.join(",");
+    if (updatedFilters.sortBy) params.sortBy = updatedFilters.sortBy;
 
     // Update URL
     const queryString = buildQueryString(params);
@@ -109,6 +119,9 @@ export default function CandidateClient({
     location?: string;
     jobType?: string[];
     experienceLevel?: string[];
+    employmentType?: string[];
+    department?: string[];
+    sortBy?: string;
   }) => {
     updateFiltersAndFetch(newFilters);
   };
@@ -117,10 +130,14 @@ export default function CandidateClient({
     const params: Record<string, any> = { page: newPage };
     if (filters.search) params.search = filters.search;
     if (filters.location) params.location = filters.location;
-    if (filters.jobType && filters.jobType.length > 0)
-      params.jobType = filters.jobType.join(",");
+    if (filters.jobType && filters.jobType.length > 0) params.jobType = filters.jobType.join(",");
     if (filters.experienceLevel && filters.experienceLevel.length > 0)
       params.experienceLevel = filters.experienceLevel.join(",");
+    if (filters.employmentType && filters.employmentType.length > 0)
+      params.employmentType = filters.employmentType.join(",");
+    if (filters.department && filters.department.length > 0)
+      params.department = filters.department.join(",");
+    if (filters.sortBy) params.sortBy = filters.sortBy;
 
     const queryString = buildQueryString(params);
     router.push(`/candidate/searchJob${queryString}`, { scroll: true });
@@ -135,47 +152,47 @@ export default function CandidateClient({
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filters Sidebar */}
-          <aside
-            className="lg:col-span-1"
-            role="complementary"
-            aria-label="Job filters"
-          >
+          <aside className="lg:col-span-1" role="complementary" aria-label="Job filters">
             <h2 className="sr-only">Filter Jobs</h2>
             <JobFilters
               filters={{
                 location: filters.location,
                 jobType: filters.jobType,
                 experienceLevel: filters.experienceLevel,
+                employmentType: filters.employmentType,
+                department: filters.department,
+                sortBy: filters.sortBy,
               }}
               onFilterChange={handleFilterChange}
               locations={locations}
+              departments={departments}
               jobTypeCounts={jobTypeCounts}
             />
           </aside>
 
           {/* Job List */}
-          <section
-            className="lg:col-span-3"
-            aria-labelledby="job-results-heading"
-          >
+          <section className="lg:col-span-3" aria-labelledby="job-results-heading">
             <h2 id="job-results-heading" className="sr-only">
               Job Search Results
             </h2>
+
+            {/* Search Bar */}
+            <div className="mb-6">
+              <JobSearch
+                initialValue={filters.search}
+                onSearch={handleSearch}
+                placeholder="Search by job title, skills, or keywords..."
+              />
+            </div>
+
             <div className="mb-4 flex items-center justify-between">
-              <p
-                className="text-sm text-gray-600"
-                role="status"
-                aria-live="polite"
-              >
+              <p className="text-sm text-gray-600" role="status" aria-live="polite">
                 {isLoading ? (
                   <span>Loading jobs...</span>
                 ) : (
                   <span>
-                    Showing{" "}
-                    <strong>
-                      {jobs.length > 0 ? (page - 1) * initialLimit + 1 : 0}
-                    </strong>{" "}
-                    - <strong>{Math.min(page * initialLimit, total)}</strong> of{" "}
+                    Showing <strong>{jobs.length > 0 ? (page - 1) * initialLimit + 1 : 0}</strong> -{" "}
+                    <strong>{Math.min(page * initialLimit, total)}</strong> of{" "}
                     <strong>{total.toLocaleString()}</strong> jobs
                   </span>
                 )}

@@ -27,7 +27,7 @@ export interface JobWithApplications {
     applicationCount: number;
     companyName: string;
     companySlug: string;
-    careerPageSlug: string;
+    careerSlug: string;
 }
 
 export interface JobsTableProps {
@@ -41,12 +41,15 @@ export interface JobsTableProps {
 // Filters types
 export interface JobFilters {
     search: string;
+    jobId: string;
     companyName: string;
     jobType: string;
     experienceLevel: string;
     isActive: string;
     dateFrom: string;
     dateTo: string;
+    sortBy: string;
+    page: number;
 }
 
 export interface FiltersPanelProps {

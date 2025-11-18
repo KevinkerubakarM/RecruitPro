@@ -4,12 +4,14 @@ export interface JobFormData {
   location: string;
   jobType: "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "REMOTE";
   experienceLevel:
-    | "ENTRY_LEVEL"
-    | "JUNIOR"
-    | "MID_LEVEL"
-    | "SENIOR"
-    | "LEAD"
-    | "EXECUTIVE";
+  | "ENTRY_LEVEL"
+  | "JUNIOR"
+  | "MID_LEVEL"
+  | "SENIOR"
+  | "LEAD"
+  | "EXECUTIVE";
+  employmentType: "PERMANENT" | "TEMPORARY";
+  department?: string;
   description?: string;
   technicalRequirements: string[];
   softSkills: string[];
@@ -37,6 +39,8 @@ export interface CreateJobRequest {
   location: string;
   jobType: string;
   experienceLevel: string;
+  employmentType: string;
+  department?: string;
   description?: string;
   technicalRequirements: string[];
   softSkills: string[];
@@ -56,7 +60,7 @@ export interface CreateJobResponse {
   data?: {
     id: string;
     title: string;
-    careerPageSlug: string;
+    careerSlug: string;
     applicationUrl: string;
     isActive: boolean;
   };
@@ -70,7 +74,7 @@ export interface CreateJobResponse {
 // Job preview data
 export interface JobPreviewData extends JobFormData {
   companyName: string;
-  careerPageSlug?: string;
+  careerSlug?: string;
   applicationUrl?: string;
 }
 

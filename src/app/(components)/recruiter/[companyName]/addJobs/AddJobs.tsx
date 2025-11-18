@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { storage, STORAGE_KEYS, getAuthHeaders } from "@/lib/helper";
 import { JobFormData } from "@/types/app/(components)/recruiter/addJobs.type";
 import { validateSalaryRange } from "@/validators/app/(components)/recruiter/addJobs.validator";
-import { API_ROUTES, JOB_TYPES, EXPERIENCE_LEVELS } from "@/lib/constants";
+import { API_ROUTES, JOB_TYPES, EXPERIENCE_LEVELS, EMPLOYMENT_TYPES } from "@/lib/constants";
 import JobPreview from "./JobPreview";
 import AuthWrapper from "@/app/(components)/common/AuthWrapper";
 import { useToast } from "@/app/(components)/common/useToast";
@@ -41,6 +41,8 @@ export default function AddJobPage() {
     location: "",
     jobType: "FULL_TIME",
     experienceLevel: "MID_LEVEL",
+    employmentType: "PERMANENT",
+    department: "",
     description: "",
     technicalRequirements: [""],
     softSkills: [""],
@@ -113,6 +115,8 @@ export default function AddJobPage() {
               location: jobData.location || "",
               jobType: jobData.jobType || "FULL_TIME",
               experienceLevel: jobData.experienceLevel || "MID_LEVEL",
+              employmentType: jobData.employmentType || "PERMANENT",
+              department: jobData.department || "",
               description: jobData.description || "",
               technicalRequirements:
                 jobData.technicalRequirements?.length > 0 ? jobData.technicalRequirements : [""],
@@ -236,6 +240,8 @@ export default function AddJobPage() {
         location: formData.location.trim(),
         jobType: formData.jobType,
         experienceLevel: formData.experienceLevel,
+        employmentType: formData.employmentType,
+        department: formData.department?.trim() || null,
         description: formData.description?.trim() || undefined,
         technicalRequirements: formData.technicalRequirements.filter((r) => r.trim()),
         softSkills: formData.softSkills.filter((s) => s.trim()),
@@ -299,6 +305,8 @@ export default function AddJobPage() {
         location: formData.location.trim(),
         jobType: formData.jobType,
         experienceLevel: formData.experienceLevel,
+        employmentType: formData.employmentType,
+        department: formData.department?.trim() || null,
         description: formData.description?.trim() || undefined,
         technicalRequirements: formData.technicalRequirements.filter((r) => r.trim()),
         softSkills: formData.softSkills.filter((s) => s.trim()),
@@ -501,6 +509,48 @@ export default function AddJobPage() {
                     </option>
                   ))}
                 </select>
+              </section>
+
+              {/* Employment Type and Department */}
+              <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label
+                    htmlFor="employment-type"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Employment Type *
+                  </label>
+                  <select
+                    id="employment-type"
+                    value={formData.employmentType}
+                    onChange={(e) => handleInputChange("employmentType", e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    aria-required="true"
+                  >
+                    {Object.entries(EMPLOYMENT_TYPES).map(([key, value]) => (
+                      <option key={key} value={key}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="department"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Department
+                  </label>
+                  <input
+                    id="department"
+                    type="text"
+                    value={formData.department}
+                    onChange={(e) => handleInputChange("department", e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    placeholder="e.g., Engineering, Sales, Marketing"
+                  />
+                </div>
               </section>
 
               {/* Description */}

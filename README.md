@@ -146,7 +146,6 @@ Authorization implemented on frontend and backend to avoid unauthorized access a
 
 ## Improvement Plan
 
-- Recruiter can click on applicants and see list of all applicants who applied and their profile.
 - Recruiter can see top applicants by date applied, location, technical skills.
 - Dynamic navigation header for faster traversal.
 - Improve redirection messages and error messages.

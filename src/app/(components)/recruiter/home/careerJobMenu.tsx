@@ -52,12 +52,15 @@ export default function CareerJobMenu() {
 
   const [filters, setFilters] = useState<JobFilters>({
     search: "",
+    jobId: "",
     companyName: "",
     jobType: "",
     experienceLevel: "",
     isActive: "",
     dateFrom: "",
     dateTo: "",
+    sortBy: "date-desc",
+    page: 1,
   });
 
   useEffect(() => {
@@ -112,6 +115,8 @@ export default function CareerJobMenu() {
       try {
         const queryParams = new URLSearchParams({
           ...(filters.search && { search: filters.search }),
+          ...(filters.jobId && { jobId: filters.jobId }),
+          ...(filters.companyName && { companyName: filters.companyName }),
           ...(filters.jobType && { jobType: filters.jobType }),
           ...(filters.experienceLevel && {
             experienceLevel: filters.experienceLevel,
@@ -119,7 +124,10 @@ export default function CareerJobMenu() {
           ...(filters.isActive && { isActive: filters.isActive }),
           ...(filters.dateFrom && { dateFrom: filters.dateFrom }),
           ...(filters.dateTo && { dateTo: filters.dateTo }),
+          ...(filters.sortBy && { sortBy: filters.sortBy }),
+          ...(filters.page && { page: filters.page.toString() }),
         });
+        console.log("Fetching dashboard with params:", queryParams.toString());
 
         const response = await fetch(
           `${API_ROUTES.RECRUITER.DASHBOARD}?${queryParams}`,
@@ -149,12 +157,15 @@ export default function CareerJobMenu() {
   const handleResetFilters = useCallback(() => {
     setFilters({
       search: "",
+      jobId: "",
       companyName: "",
       jobType: "",
       experienceLevel: "",
       isActive: "",
       dateFrom: "",
       dateTo: "",
+      sortBy: "date-desc",
+      page: 1,
     });
   }, []);
 
@@ -409,8 +420,8 @@ export default function CareerJobMenu() {
   );
 
   const handleViewApplications = useCallback(
-    (jobId: string) => {
-      // router.push(`/recruiter/applications/${jobId}`);
+    (jobId: string, companySlug: string) => {
+      router.push(`/recruiter/${companySlug}/jobApplicants?jobId=${jobId}`);
     },
     [router]
   );

@@ -3,14 +3,13 @@ import {
   getJobs,
   getUniqueJobLocations,
   getJobCountsByType,
+  getUniqueDepartments,
 } from "@/services/job.service";
 import { CandidatePageProps } from "@/types/app/(components)/candidate/candidate.type";
 import CandidateClient from "@/app/(components)/candidate/searchJob/Candidate";
 
 // Generate metadata for SEO
-export async function generateMetadata({
-  searchParams,
-}: CandidatePageProps): Promise<Metadata> {
+export async function generateMetadata({ searchParams }: CandidatePageProps): Promise<Metadata> {
   const resolvedParams = await searchParams;
   const search = resolvedParams?.search || "";
   const location = resolvedParams?.location || "";
@@ -51,9 +50,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function CandidatePage({
-  searchParams,
-}: CandidatePageProps) {
+export default async function CandidatePage({ searchParams }: CandidatePageProps) {
   // Await search params (Next.js 15+ requirement)
   const resolvedParams = await searchParams;
 
@@ -63,14 +60,18 @@ export default async function CandidatePage({
     location: resolvedParams?.location,
     jobType: resolvedParams?.jobType,
     experienceLevel: resolvedParams?.experienceLevel,
+    employmentType: resolvedParams?.employmentType,
+    department: resolvedParams?.department,
     page: resolvedParams?.page ? Number(resolvedParams.page) : 1,
     limit: resolvedParams?.limit ? Number(resolvedParams.limit) : 20,
+    sortBy: resolvedParams?.sortBy,
   };
 
   // Fetch data server-side for SEO and initial load
-  const [jobsResult, locations, jobTypeCounts] = await Promise.all([
+  const [jobsResult, locations, departments, jobTypeCounts] = await Promise.all([
     getJobs(params),
     getUniqueJobLocations(),
+    getUniqueDepartments(),
     getJobCountsByType(),
   ]);
 
@@ -79,9 +80,10 @@ export default async function CandidatePage({
     search: params.search,
     location: params.location,
     jobType: params.jobType ? params.jobType.split(",") : [],
-    experienceLevel: params.experienceLevel
-      ? params.experienceLevel.split(",")
-      : [],
+    experienceLevel: params.experienceLevel ? params.experienceLevel.split(",") : [],
+    employmentType: params.employmentType ? params.employmentType.split(",") : [],
+    department: params.department ? params.department.split(",") : [],
+    sortBy: params.sortBy,
   };
 
   return (
@@ -94,51 +96,48 @@ export default async function CandidatePage({
             "@context": "https://schema.org",
             "@type": "CollectionPage",
             name: params.search ? `${params.search} Jobs` : "Job Search",
-            description:
-              "Browse and search for job opportunities from top companies",
+            description: "Browse and search for job opportunities from top companies",
             url: `https://jobhunt.com/candidate/searchJob`,
             mainEntity: {
               "@type": "ItemList",
               numberOfItems: jobsResult.total,
-              itemListElement: jobsResult.jobs
-                .slice(0, 10)
-                .map((job: any, index: number) => ({
-                  "@type": "ListItem",
-                  position: index + 1,
-                  item: {
-                    "@type": "JobPosting",
-                    "@id": `https://jobhunt.com/careers/${job.companyBranding?.companySlug}/job?jobId=${job.id}`,
-                    title: job.title,
-                    description: job.description?.substring(0, 200),
-                    datePosted: job.postedAt,
-                    employmentType: job.jobType,
-                    hiringOrganization: {
-                      "@type": "Organization",
-                      name: job.companyBranding?.companyName || "Company",
-                      logo: job.companyBranding?.logoUrl,
-                    },
-                    jobLocation: {
-                      "@type": "Place",
-                      address: {
-                        "@type": "PostalAddress",
-                        addressLocality: job.location,
-                      },
-                    },
-                    baseSalary:
-                      job.salaryMin && job.salaryMax
-                        ? {
-                            "@type": "MonetaryAmount",
-                            currency: job.salaryCurrency || "USD",
-                            value: {
-                              "@type": "QuantitativeValue",
-                              minValue: job.salaryMin,
-                              maxValue: job.salaryMax,
-                              unitText: "YEAR",
-                            },
-                          }
-                        : undefined,
+              itemListElement: jobsResult.jobs.slice(0, 10).map((job: any, index: number) => ({
+                "@type": "ListItem",
+                position: index + 1,
+                item: {
+                  "@type": "JobPosting",
+                  "@id": `https://jobhunt.com/careers/${job.companyBranding?.companySlug}/job?jobId=${job.id}`,
+                  title: job.title,
+                  description: job.description?.substring(0, 200),
+                  datePosted: job.postedAt,
+                  employmentType: job.jobType,
+                  hiringOrganization: {
+                    "@type": "Organization",
+                    name: job.companyBranding?.companyName || "Company",
+                    logo: job.companyBranding?.logoUrl,
                   },
-                })),
+                  jobLocation: {
+                    "@type": "Place",
+                    address: {
+                      "@type": "PostalAddress",
+                      addressLocality: job.location,
+                    },
+                  },
+                  baseSalary:
+                    job.salaryMin && job.salaryMax
+                      ? {
+                          "@type": "MonetaryAmount",
+                          currency: job.salaryCurrency || "USD",
+                          value: {
+                            "@type": "QuantitativeValue",
+                            minValue: job.salaryMin,
+                            maxValue: job.salaryMax,
+                            unitText: "YEAR",
+                          },
+                        }
+                      : undefined,
+                },
+              })),
             },
             breadcrumb: {
               "@type": "BreadcrumbList",
@@ -168,6 +167,7 @@ export default async function CandidatePage({
         initialLimit={jobsResult.limit}
         initialTotalPages={jobsResult.totalPages}
         locations={locations}
+        departments={departments}
         jobTypeCounts={jobTypeCounts}
         initialFilters={initialFilters}
       />

@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { CTAButtonsProps } from "@/types/app/(components)/candidate/home.type";
 
-export default function CTAButtons({ onSearchJobs, onViewApplications }: CTAButtonsProps) {
+export default function CTAButtons({
+  onSearchJobs,
+  onViewApplications,
+  onUpdateProfile,
+}: CTAButtonsProps) {
   return (
     <section
       aria-labelledby="cta-heading"
@@ -32,6 +36,13 @@ export default function CTAButtons({ onSearchJobs, onViewApplications }: CTAButt
               aria-label="View and manage your job applications"
             >
               <span aria-hidden="true">📋</span> View Applications
+            </button>
+            <button
+              onClick={onUpdateProfile}
+              className="px-12 py-5 bg-white text-indigo-600 rounded-3xl font-extrabold hover:bg-gray-100 transition-all shadow-2xl hover:shadow-3xl transform hover:-translate-y-1"
+              aria-label="Update your candidate profile"
+            >
+              <span aria-hidden="true">👤</span> Update Profile
             </button>
           </div>
         </nav>

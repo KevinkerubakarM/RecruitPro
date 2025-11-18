@@ -1,24 +1,44 @@
 import { Metadata } from "next";
 import CandidatePublicProfileClient from "./CandidatePublicProfile";
+import { primsaService } from "@/services/prisma.service";
 
 type Props = {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { userId } = params;
+  const { userId } = await params;
 
   try {
-    const response = await fetch(
-      `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/api/candidate/${userId}/profile`,
-      { cache: "no-store" }
-    );
-    const result = await response.json();
+    await primsaService.initialize();
+    const prisma = primsaService.getClient();
 
-    if (result.success && result.data) {
-      const profile = result.data;
+    const candidateProfile = await prisma.candidateProfile.findFirst({
+      where: {
+        userId: userId,
+      },
+      include: {
+        user: {
+          select: {
+            email: true,
+            name: true,
+            phone: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+
+    if (candidateProfile) {
+      const profile = {
+        name: candidateProfile.user.name,
+        isNewToExperience: candidateProfile.isNewToExperience,
+        yearsOfExperience: candidateProfile.yearsOfExperience,
+        skills: candidateProfile.skills,
+        location: candidateProfile.location,
+        availableForWork: candidateProfile.availableForWork,
+        lookingForRoles: candidateProfile.lookingForRoles,
+      };
       const title = `${profile.name} - ${
         profile.isNewToExperience ? "Fresher" : `${profile.yearsOfExperience}+ Years Experience`
       } | Professional Profile`;
@@ -70,6 +90,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function CandidatePublicProfile({ params }: Props) {
-  return <CandidatePublicProfileClient userId={params.userId} />;
+export default async function CandidatePublicProfile({ params }: Props) {
+  const { userId } = await params;
+  return <CandidatePublicProfileClient userId={userId} />;
 }

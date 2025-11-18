@@ -134,6 +134,11 @@ enum ExperienceLevel {
   EXECUTIVE
 }
 
+enum EmploymentType {
+  PERMANENT
+  TEMPORARY
+}
+
 model Job {
   id                   String           @id @default(cuid())
   companyBrandingId    String
@@ -145,6 +150,8 @@ model Job {
   location             String
   jobType              JobType
   experienceLevel      ExperienceLevel  @default(MID_LEVEL)
+  employmentType       EmploymentType   @default(PERMANENT)
+  department           String?
   
   // Salary (optional)
   salaryMin            Int?
@@ -162,7 +169,7 @@ model Job {
   skills               String[]         @default([])
   
   // Application details (auto-generated)
-  careerPageSlug       String
+  careerSlug           String
   applicationUrl       String?
   contactEmail         String?
   
@@ -182,7 +189,7 @@ model Job {
   @@index([isActive, postedAt])
   @@index([location])
   @@index([jobType])
-  @@index([careerPageSlug])
+  @@index([careerSlug])
 }
 
 enum ApplicationStatus {

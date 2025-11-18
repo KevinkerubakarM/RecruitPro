@@ -19,13 +19,20 @@ export interface JobFiltersProps {
         location: string
         jobType: string[]
         experienceLevel: string[]
+        employmentType?: string[]
+        department?: string[]
+        sortBy?: string
     }
     onFilterChange: (filters: {
         location?: string
         jobType?: string[]
         experienceLevel?: string[]
+        employmentType?: string[]
+        department?: string[]
+        sortBy?: string
     }) => void
     locations: string[]
+    departments?: string[]
     jobTypeCounts?: Record<string, number>
 }
 

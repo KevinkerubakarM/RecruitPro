@@ -35,6 +35,7 @@ export interface CandidateHomeProps { }
 export interface CTAButtonsProps {
     onSearchJobs: () => void;
     onViewApplications: () => void;
+    onUpdateProfile: () => void;
 }
 
 // Props for StatsCards component

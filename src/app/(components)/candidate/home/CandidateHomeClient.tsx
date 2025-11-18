@@ -66,6 +66,10 @@ export default function CandidateHomeClient() {
     router.push("/candidate/listAppliedJobs");
   };
 
+  const handleUpdateProfile = () => {
+    router.push("/candidate/profile");
+  };
+
   return (
     <AuthWrapper requiredRole="CANDIDATE">
       <Header />
@@ -81,7 +85,11 @@ export default function CandidateHomeClient() {
           </header>
 
           {/* CTA Buttons */}
-          <CTAButtons onSearchJobs={handleSearchJobs} onViewApplications={handleViewApplications} />
+          <CTAButtons
+            onSearchJobs={handleSearchJobs}
+            onViewApplications={handleViewApplications}
+            onUpdateProfile={handleUpdateProfile}
+          />
 
           {/* Stats Cards */}
           <StatsCards stats={stats} loading={loading} />

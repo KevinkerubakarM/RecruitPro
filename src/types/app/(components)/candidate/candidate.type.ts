@@ -7,6 +7,8 @@ export interface JobData {
     location: string
     jobType: string  // Changed from JobType enum to string for compatibility with Prisma
     experienceLevel: string  // Changed from ExperienceLevel enum to string for compatibility with Prisma
+    employmentType: string
+    department?: string | null
     salaryMin?: number | null
     salaryMax?: number | null
     salaryCurrency: string
@@ -55,6 +57,7 @@ export interface JobFilters {
     jobType?: JobType[]
     experienceLevel?: ExperienceLevel[]
     search?: string
+    sortBy?: string
 }
 
 export interface JobSearchParams {
@@ -62,9 +65,12 @@ export interface JobSearchParams {
     location?: string
     jobType?: string
     experienceLevel?: string
+    employmentType?: string
+    department?: string
     companyBrandingId?: string
     page?: number
     limit?: number
+    sortBy?: string
 }
 
 // API Response types

@@ -104,11 +104,14 @@ export async function upsertCompanyBranding(
     try {
         await primsaService.initialize()
         const prisma = primsaService.getClient()
-        const existingBranding = data.id
-            ? await prisma.companyBranding.findUnique({
-                where: { id: data.id },
-            })
-            : null
+
+        // Check if branding exists by slug for this user
+        const existingBranding = await prisma.companyBranding.findFirst({
+            where: {
+                userId,
+                companySlug: data.companySlug,
+            },
+        })
 
         const brandingData = {
             userId,
@@ -126,9 +129,9 @@ export async function upsertCompanyBranding(
                 data.isPublished && !existingBranding?.isPublished ? new Date() : existingBranding?.publishedAt,
         }
 
-        const branding = data.id
+        const branding = existingBranding
             ? await prisma.companyBranding.update({
-                where: { id: data.id },
+                where: { id: existingBranding.id },
                 data: brandingData,
             })
             : await prisma.companyBranding.create({

@@ -24,6 +24,16 @@ const jobFormSchema = z.object({
         }
     ),
 
+    employmentType: z.enum(['PERMANENT', 'TEMPORARY'], {
+        message: 'Please select a valid employment type',
+    }),
+
+    department: z
+        .string()
+        .min(2, 'Department must be at least 2 characters')
+        .max(100, 'Department must not exceed 100 characters')
+        .optional(),
+
     description: z
         .string()
         .max(5000, 'Description must not exceed 5000 characters')

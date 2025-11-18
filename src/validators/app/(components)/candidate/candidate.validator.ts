@@ -7,6 +7,8 @@ const jobSearchParamsSchema = z.object({
     location: z.string().max(100).optional(),
     jobType: z.string().max(100).optional(),
     experienceLevel: z.string().max(100).optional(),
+    employmentType: z.string().max(100).optional(),
+    department: z.string().max(100).optional(),
     companyBrandingId: z.string().cuid().optional(),
     page: z.coerce.number().int().min(1).optional().default(1),
     limit: z.coerce.number().int().min(1).max(100).optional().default(20),
@@ -53,6 +55,13 @@ const experienceLevelFilterSchema = z.enum([
 
 export function validateExperienceLevel(level: string) {
     return experienceLevelFilterSchema.safeParse(level).success
+}
+
+// Employment type filter schema
+const employmentTypeFilterSchema = z.enum(['PERMANENT', 'TEMPORARY'])
+
+export function validateEmploymentType(type: string) {
+    return employmentTypeFilterSchema.safeParse(type).success
 }
 
 // Parse comma-separated filter values

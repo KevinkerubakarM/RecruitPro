@@ -7,6 +7,7 @@ import { formatSalary, getAuthHeaders, getUserData } from "@/lib/helper";
 import { JOB_TYPES, EXPERIENCE_LEVELS, API_ROUTES } from "@/lib/constants";
 import { useToast } from "@/app/(components)/common/useToast";
 import AuthWrapper from "@/app/(components)/common/AuthWrapper";
+import Header from "@/app/(components)/common/Header";
 
 export default function JobPreview({ jobId, isRecruiterView = true }: JobPreviewProps) {
   const router = useRouter();
@@ -179,6 +180,7 @@ export default function JobPreview({ jobId, isRecruiterView = true }: JobPreview
 
   const mainContent = (
     <>
+      <Header />
       <ToastContainer />
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4">

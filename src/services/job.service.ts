@@ -31,15 +31,6 @@ export async function getJobs(params: JobSearchParams) {
             where.isActive = true
         }
 
-        // Add search filter (searches in title, description, skills)
-        if (search) {
-            where.OR = [
-                { title: { contains: search, mode: 'insensitive' } },
-                { description: { contains: search, mode: 'insensitive' } },
-                { skills: { has: search } },
-            ]
-        }
-
         // Add location filter
         if (location) {
             where.location = { contains: location, mode: 'insensitive' }
@@ -61,32 +52,68 @@ export async function getJobs(params: JobSearchParams) {
             }
         }
 
+        // Add employment type filter
+        const employmentType = params.employmentType
+        if (employmentType) {
+            const types = employmentType.split(',').filter(Boolean)
+            if (types.length > 0) {
+                where.employmentType = { in: types }
+            }
+        }
+
+        // Add department filter
+        const department = params.department
+        if (department) {
+            const departments = department.split(',').filter(Boolean)
+            if (departments.length > 0) {
+                where.department = { in: departments }
+            }
+        }
+
         // Fetch jobs with company branding info
-        const [jobs, total] = await Promise.all([
-            prisma.job.findMany({
-                where,
-                include: {
-                    companyBranding: {
-                        select: {
-                            id: true,
-                            companyName: true,
-                            companySlug: true,
-                            logoUrl: true,
-                            primaryColor: true,
-                        },
+        let jobs = await prisma.job.findMany({
+            where,
+            include: {
+                companyBranding: {
+                    select: {
+                        id: true,
+                        companyName: true,
+                        companySlug: true,
+                        logoUrl: true,
+                        primaryColor: true,
                     },
                 },
-                orderBy: {
-                    postedAt: 'desc',
-                },
-                skip,
-                take: limit,
-            }),
-            prisma.job.count({ where }),
-        ])
+            },
+            orderBy: {
+                postedAt: 'desc',
+            },
+        })
+
+        // Apply search filter (searches in title, description, technicalRequirements, softSkills, skills)
+        if (search) {
+            const searchLower = search.toLowerCase()
+            jobs = jobs.filter((job: any) => {
+                // Check title and description
+                if (job.title?.toLowerCase().includes(searchLower)) return true
+                if (job.description?.toLowerCase().includes(searchLower)) return true
+
+                // Check array fields
+                if (job.technicalRequirements?.some((req: string) => req.toLowerCase().includes(searchLower))) return true
+                if (job.softSkills?.some((skill: string) => skill.toLowerCase().includes(searchLower))) return true
+                if (job.skills?.some((skill: string) => skill.toLowerCase().includes(searchLower))) return true
+
+                return false
+            })
+        }
+
+        // Get total count
+        const total = jobs.length
+
+        // Apply pagination
+        const paginatedJobs = jobs.slice(skip, skip + limit)
 
         return {
-            jobs,
+            jobs: paginatedJobs,
             total,
             page,
             limit,
@@ -150,6 +177,36 @@ export async function getUniqueJobLocations(): Promise<string[]> {
         return jobs.map((job: any) => job.location)
     } catch (error) {
         console.error('Error fetching job locations:', error)
+        return []
+    }
+}
+
+// Get unique departments from all active jobs
+export async function getUniqueDepartments(): Promise<string[]> {
+    try {
+        await primsaService.initialize()
+        const prisma = primsaService.getClient()
+
+        const jobs = await prisma.job.findMany({
+            where: {
+                isActive: true,
+                department: { not: null },
+                companyBranding: {
+                    isPublished: true,
+                },
+            },
+            select: {
+                department: true,
+            },
+            distinct: ['department'],
+            orderBy: {
+                department: 'asc',
+            },
+        })
+
+        return jobs.map((job: any) => job.department).filter(Boolean)
+    } catch (error) {
+        console.error('Error fetching departments:', error)
         return []
     }
 }
@@ -238,6 +295,8 @@ export async function upsertJob(data: {
     location: string
     jobType: string
     experienceLevel: string
+    employmentType: string
+    department?: string | null
     description?: string
     technicalRequirements: string[]
     softSkills: string[]
@@ -254,8 +313,8 @@ export async function upsertJob(data: {
         await primsaService.initialize()
         const prisma = primsaService.getClient()
 
-        // Generate career page slug from title
-        const careerPageSlug = data.title
+        // Generate career slug from title
+        const careerSlug = data.title
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/^-|-$/g, '')
@@ -280,6 +339,8 @@ export async function upsertJob(data: {
             location: data.location,
             jobType: data.jobType,
             experienceLevel: data.experienceLevel,
+            employmentType: data.employmentType,
+            department: data.department,
             description: data.description,
             technicalRequirements: data.technicalRequirements,
             softSkills: data.softSkills,
@@ -290,7 +351,7 @@ export async function upsertJob(data: {
             salaryCurrency: data.salaryCurrency || 'USD',
             contactEmail: data.contactEmail,
             expiresAt: data.expiresAt,
-            careerPageSlug,
+            careerSlug,
             applicationUrl,
             isActive: data.isActive ?? true,
             // Map to deprecated fields for backward compatibility
@@ -315,14 +376,14 @@ export async function upsertJob(data: {
     }
 }
 
-// Get job by career page slug
+// Get job by career slug
 export async function getJobBySlug(slug: string) {
     try {
         await primsaService.initialize()
         const prisma = primsaService.getClient()
 
         return await prisma.job.findUnique({
-            where: { careerPageSlug: slug },
+            where: { careerSlug: slug },
             include: {
                 companyBranding: {
                     select: {
