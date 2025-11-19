@@ -15,6 +15,7 @@ export const API_ROUTES = {
     CANDIDATE: {
         STATS: '/api/candidate/stats',
         APPLICATIONS: '/api/candidate/applications',
+        PROFILE: (userId: string) => `/api/candidate/${userId}/profile`,
     },
 } as const
 

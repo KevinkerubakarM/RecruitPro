@@ -16,9 +16,13 @@ interface JobApplication {
   appliedAt: string;
   location: string;
   jobType: string;
+  applicationUrl: string;
 }
 
-const statusColors: Record<string, { bg: string; text: string; label: string }> = {
+const statusColors: Record<
+  string,
+  { bg: string; text: string; label: string }
+> = {
   APPLIED: {
     bg: "bg-blue-100",
     text: "text-blue-800",
@@ -57,7 +61,9 @@ export default function ListAppliedJobsClient() {
 
   const [loading, setLoading] = useState(true);
   const [applications, setApplications] = useState<JobApplication[]>([]);
-  const [filteredApplications, setFilteredApplications] = useState<JobApplication[]>([]);
+  const [filteredApplications, setFilteredApplications] = useState<
+    JobApplication[]
+  >([]);
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -72,7 +78,9 @@ export default function ListAppliedJobsClient() {
         }
 
         const response = await fetch(
-          `${API_ROUTES.CANDIDATE.APPLICATIONS}?email=${encodeURIComponent(user.email)}`,
+          `${API_ROUTES.CANDIDATE.APPLICATIONS}?email=${encodeURIComponent(
+            user.email
+          )}`,
           {
             headers: getAuthHeaders(),
           }
@@ -131,6 +139,11 @@ export default function ListAppliedJobsClient() {
     return counts;
   };
 
+  const handleViewDetails = (applicationUrl: string) => {
+    // Navigate to application details page
+    router.push(applicationUrl);
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -169,7 +182,12 @@ export default function ListAppliedJobsClient() {
                 className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 font-semibold"
                 aria-label="Back to Dashboard"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -180,7 +198,9 @@ export default function ListAppliedJobsClient() {
                 Back to Dashboard
               </button>
             </nav>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">My Applications</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              My Applications
+            </h1>
             <p className="text-gray-600 text-lg">
               Track and manage all your job applications in one place
             </p>
@@ -225,30 +245,38 @@ export default function ListAppliedJobsClient() {
               >
                 All ({statusCounts.ALL || 0})
               </button>
-              {Object.entries(statusColors).map(([status, { bg, text, label }]) => (
-                <button
-                  key={status}
-                  onClick={() => setSelectedStatus(status)}
-                  className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                    selectedStatus === status
-                      ? "bg-indigo-600 text-white"
-                      : `${bg} ${text} hover:opacity-80`
-                  }`}
-                  aria-pressed={selectedStatus === status}
-                >
-                  {label} ({statusCounts[status] || 0})
-                </button>
-              ))}
+              {Object.entries(statusColors).map(
+                ([status, { bg, text, label }]) => (
+                  <button
+                    key={status}
+                    onClick={() => setSelectedStatus(status)}
+                    className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+                      selectedStatus === status
+                        ? "bg-indigo-600 text-white"
+                        : `${bg} ${text} hover:opacity-80`
+                    }`}
+                    aria-pressed={selectedStatus === status}
+                  >
+                    {label} ({statusCounts[status] || 0})
+                  </button>
+                )
+              )}
             </div>
           </section>
 
           {/* Applications List */}
           {filteredApplications.length === 0 ? (
             <section className="bg-white rounded-2xl shadow-lg p-12 text-center">
-              <div className="text-6xl mb-4" role="img" aria-label="Empty mailbox">
+              <div
+                className="text-6xl mb-4"
+                role="img"
+                aria-label="Empty mailbox"
+              >
                 📭
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">No Applications Found</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                No Applications Found
+              </h2>
               <p className="text-gray-600 mb-6">
                 {searchQuery || selectedStatus !== "ALL"
                   ? "Try adjusting your filters to see more results."
@@ -265,7 +293,8 @@ export default function ListAppliedJobsClient() {
             <section aria-label="Job applications list">
               <ul className="space-y-4">
                 {filteredApplications.map((application) => {
-                  const statusConfig = statusColors[application.status] || statusColors.APPLIED;
+                  const statusConfig =
+                    statusColors[application.status] || statusColors.APPLIED;
 
                   return (
                     <li
@@ -283,12 +312,6 @@ export default function ListAppliedJobsClient() {
                                 {application.companyName}
                               </p>
                             </div>
-                            <span
-                              className={`px-4 py-2 rounded-full text-sm font-bold ${statusConfig.bg} ${statusConfig.text}`}
-                              aria-label={`Application status: ${statusConfig.label}`}
-                            >
-                              {statusConfig.label}
-                            </span>
                           </div>
 
                           <dl className="flex flex-wrap gap-4 text-sm text-gray-600 mt-3">
@@ -313,17 +336,20 @@ export default function ListAppliedJobsClient() {
                             </div>
                           </dl>
                         </div>
-
+                        <span
+                          className={`px-4 py-2 rounded-full text-sm font-bold ${statusConfig.bg} ${statusConfig.text}`}
+                          aria-label={`Application status: ${statusConfig.label}`}
+                        >
+                          {statusConfig.label}
+                        </span>
                         <div className="flex flex-col md:flex-row gap-2">
                           <button
                             onClick={() => {
-                              // Navigate to job details or application details
-                              // For now, just show a message
-                              alert("View details feature coming soon!");
+                              handleViewDetails(application.applicationUrl);
                             }}
                             className="px-6 py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 font-semibold transition-colors"
                           >
-                            View Details
+                            View Job Post
                           </button>
                         </div>
                       </article>
@@ -340,13 +366,20 @@ export default function ListAppliedJobsClient() {
               aria-labelledby="summary-heading"
               className="mt-8 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl shadow-lg p-6 border border-indigo-200"
             >
-              <h2 id="summary-heading" className="text-xl font-bold text-gray-900 mb-4">
+              <h2
+                id="summary-heading"
+                className="text-xl font-bold text-gray-900 mb-4"
+              >
                 Application Summary
               </h2>
               <dl className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
-                  <dt className="text-3xl font-bold text-indigo-600">{applications.length}</dt>
-                  <dd className="text-sm text-gray-600 mt-1">Total Applications</dd>
+                  <dt className="text-3xl font-bold text-indigo-600">
+                    {applications.length}
+                  </dt>
+                  <dd className="text-sm text-gray-600 mt-1">
+                    Total Applications
+                  </dd>
                 </div>
                 <div className="text-center">
                   <dt className="text-3xl font-bold text-yellow-600">
@@ -361,7 +394,9 @@ export default function ListAppliedJobsClient() {
                   <dd className="text-sm text-gray-600 mt-1">Interviewing</dd>
                 </div>
                 <div className="text-center">
-                  <dt className="text-3xl font-bold text-green-600">{statusCounts.OFFERED || 0}</dt>
+                  <dt className="text-3xl font-bold text-green-600">
+                    {statusCounts.OFFERED || 0}
+                  </dt>
                   <dd className="text-sm text-gray-600 mt-1">Offers</dd>
                 </div>
               </dl>

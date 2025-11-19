@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { storage, STORAGE_KEYS } from "@/lib/helper";
+import { getUserData, getAuthHeaders } from "@/lib/helper";
 import { useToast } from "@/app/(components)/common/useToast";
+import { API_ROUTES } from "@/lib/constants";
 import AuthWrapper from "@/app/(components)/common/AuthWrapper";
 import Header from "../../common/Header";
 
@@ -79,40 +80,68 @@ export default function ProfilePageClient() {
   const roleDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const loadProfile = () => {
+    const loadProfile = async () => {
       try {
-        const user = storage.get(STORAGE_KEYS.USER_DATA);
+        const user = getUserData();
 
         if (!user) {
           router.push("/login");
           return;
         }
 
-        // Load profile from localStorage if it exists
-        const savedProfile = storage.get(STORAGE_KEYS.CANDIDATE_PROFILE);
+        // Fetch profile from API
+        const response = await fetch(API_ROUTES.CANDIDATE.PROFILE(user.userId), {
+          headers: getAuthHeaders(),
+        });
 
-        if (savedProfile) {
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          // Profile exists, populate form
           setFormData({
-            ...savedProfile,
-            email: user.email,
+            name: result.data.name || "",
+            email: result.data.email || user.email,
+            phone: result.data.phone || "",
+            location: result.data.location || "",
+            skills: result.data.skills || [],
+            experience: null, // Deprecated field
+            education: result.data.education || "",
+            isNewToExperience: result.data.isNewToExperience || false,
+            yearsOfExperience: result.data.yearsOfExperience || null,
+            companies: result.data.companies || [],
+            designations: result.data.designations || [],
+            lookingForRoles: result.data.lookingForRoles || [],
+            availableForWork: result.data.availableForWork ?? true,
+            resume: result.data.resume || "",
           });
         } else {
+          // No profile found (e.g., recruiter creating profile)
           setFormData((prev) => ({
             ...prev,
             email: user.email,
             name: user.name || "",
+            phone: user.phone || "",
           }));
         }
       } catch (err) {
         console.error("Error loading profile:", err);
-        error("Failed to load profile");
+        // If error, still populate basic user data
+        const user = getUserData();
+        if (user) {
+          setFormData((prev) => ({
+            ...prev,
+            email: user.email,
+            name: user.name || "",
+            phone: user.phone || "",
+          }));
+        }
       } finally {
         setLoading(false);
       }
     };
 
     loadProfile();
-  }, [router, error]);
+  }, [router]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -239,15 +268,49 @@ export default function ProfilePageClient() {
         return;
       }
 
-      // Save to localStorage (in a real app, this would be an API call)
-      storage.set(STORAGE_KEYS.CANDIDATE_PROFILE, formData);
+      const user = getUserData();
+      if (!user) {
+        error("Please login again");
+        router.push("/login");
+        return;
+      }
 
-      success("Profile updated successfully!");
+      // Save to database via API
+      const response = await fetch(API_ROUTES.CANDIDATE.PROFILE(user.userId), {
+        method: "PUT",
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          location: formData.location,
+          skills: formData.skills,
+          education: formData.education,
+          isNewToExperience: formData.isNewToExperience,
+          yearsOfExperience: formData.yearsOfExperience,
+          companies: formData.companies,
+          designations: formData.designations,
+          lookingForRoles: formData.lookingForRoles,
+          availableForWork: formData.availableForWork,
+          resume: formData.resume,
+        }),
+      });
 
-      // Navigate back to dashboard after a short delay
-      setTimeout(() => {
-        router.push("/candidate/home");
-      }, 1500);
+      const result = await response.json();
+
+      if (result.success) {
+        success(result.message || "Profile updated successfully!");
+
+        // Navigate back to dashboard after a short delay
+        setTimeout(() => {
+          router.push("/candidate/home");
+        }, 1500);
+      } else {
+        error(result.error?.message || "Failed to save profile");
+        setSaving(false);
+      }
     } catch (err) {
       console.error("Error saving profile:", err);
       error("Failed to save profile");
@@ -258,7 +321,7 @@ export default function ProfilePageClient() {
 
   if (loading) {
     return (
-      <AuthWrapper requiredRole="CANDIDATE">
+      <AuthWrapper>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
@@ -270,7 +333,7 @@ export default function ProfilePageClient() {
   }
 
   return (
-    <AuthWrapper requiredRole="CANDIDATE">
+    <AuthWrapper>
       <Header />
       <ToastContainer />
       <div className="min-h-screen bg-gray-50 py-8">

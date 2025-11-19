@@ -18,6 +18,7 @@ export default function JobPreview({ jobId, isRecruiterView = true }: JobPreview
   const [publishing, setPublishing] = useState(false);
   const [applying, setApplying] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
+  const [isRecruiter, setIsRecruiter] = useState(false);
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -44,7 +45,28 @@ export default function JobPreview({ jobId, isRecruiterView = true }: JobPreview
       }
     };
 
+    const checkRecruiterStatus = async () => {
+      const user = getUserData();
+      if (user && user.role === "RECRUITER") {
+        // Check if recruiter has a candidate profile
+        try {
+          const response = await fetch(API_ROUTES.CANDIDATE.PROFILE(user.userId), {
+            headers: getAuthHeaders(),
+          });
+          const result = await response.json();
+
+          // Only set as recruiter if they don't have a candidate profile
+          if (!result.success || !result.data) {
+            setIsRecruiter(true);
+          }
+        } catch (err) {
+          // If API call fails, assume recruiter needs profile
+          setIsRecruiter(true);
+        }
+      }
+    };
     fetchJob();
+    checkRecruiterStatus();
   }, [jobId]);
 
   const handleClose = () => {
@@ -104,14 +126,6 @@ export default function JobPreview({ jobId, isRecruiterView = true }: JobPreview
       if (result.success) {
         setHasApplied(true);
         success("Application submitted successfully!");
-
-        if (result.data.candidateProfileUrl) {
-          setTimeout(() => {
-            showError(
-              `Your profile has been shared: ${window.location.origin}${result.data.candidateProfileUrl}`
-            );
-          }, 2000);
-        }
       } else {
         if (result.error?.code === "DUPLICATE_APPLICATION") {
           setHasApplied(true);
@@ -394,30 +408,62 @@ export default function JobPreview({ jobId, isRecruiterView = true }: JobPreview
 
               {/* Apply Button */}
               <div className="pt-6 border-t">
-                <button
-                  type="button"
-                  onClick={!isRecruiterView ? handleApply : undefined}
-                  disabled={!isRecruiterView && (applying || hasApplied)}
-                  className={`w-full py-4 rounded-lg font-semibold text-lg transition-colors ${
-                    !isRecruiterView && hasApplied
-                      ? "bg-green-600 text-white cursor-not-allowed"
-                      : !isRecruiterView && applying
-                      ? "bg-gray-400 text-white cursor-not-allowed"
-                      : "bg-indigo-600 text-white hover:bg-indigo-700"
-                  } ${!isRecruiterView ? "cursor-pointer" : "cursor-default"}`}
-                >
-                  {!isRecruiterView
-                    ? hasApplied
-                      ? "Applied ✓"
-                      : applying
-                      ? "Submitting..."
-                      : "Apply for this Position"
-                    : "Apply for this Position"}
-                </button>
-                {isRecruiterView && (
-                  <p className="text-center text-sm text-gray-500 mt-3">
-                    Clicking this button will take candidates to the application page
-                  </p>
+                {!isRecruiterView && isRecruiter ? (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                    <svg
+                      className="w-12 h-12 text-yellow-500 mx-auto mb-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                    <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                      Recruiter Account Detected
+                    </h3>
+                    <p className="text-yellow-700 mb-4">
+                      You need to update your profile in the candidate page to apply for jobs.
+                    </p>
+                    <a
+                      href="/candidate/profile"
+                      className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
+                    >
+                      Go to Candidate Profile
+                    </a>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={!isRecruiterView ? handleApply : undefined}
+                      disabled={!isRecruiterView && (applying || hasApplied)}
+                      className={`w-full py-4 rounded-lg font-semibold text-lg transition-colors ${
+                        !isRecruiterView && hasApplied
+                          ? "bg-green-600 text-white cursor-not-allowed"
+                          : !isRecruiterView && applying
+                          ? "bg-gray-400 text-white cursor-not-allowed"
+                          : "bg-indigo-600 text-white hover:bg-indigo-700"
+                      } ${!isRecruiterView ? "cursor-pointer" : "cursor-default"}`}
+                    >
+                      {!isRecruiterView
+                        ? hasApplied
+                          ? "Applied ✓"
+                          : applying
+                          ? "Submitting..."
+                          : "Apply for this Position"
+                        : "Apply for this Position"}
+                    </button>
+                    {isRecruiterView && (
+                      <p className="text-center text-sm text-gray-500 mt-3">
+                        Clicking this button will take candidates to the application page
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             </div>

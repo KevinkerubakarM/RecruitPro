@@ -50,6 +50,7 @@ export async function POST(
                 name: true,
                 email: true,
                 phone: true,
+                role: true,
             },
         })
 

@@ -90,6 +90,7 @@ export async function getCandidateApplications(
       appliedAt: app.appliedAt.toISOString(),
       location: app.job.location,
       jobType: app.job.jobType,
+      applicationUrl: app.job.applicationUrl,
     }));
   } catch (error) {
     console.error("Error fetching candidate applications:", error);
